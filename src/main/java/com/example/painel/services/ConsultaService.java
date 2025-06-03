@@ -42,6 +42,9 @@ public class ConsultaService {
             createConsultaDto.tipo(),
             createConsultaDto.status()
         );
+        if (isAgendado(consulta)) {
+            throw new RuntimeException("Já existe uma consulta marcada neste horário.");
+        }
         return consultaRepository.save(consulta);
     }
 
@@ -56,6 +59,21 @@ public class ConsultaService {
 
     public List<Consulta> getConsultasByPacienteId(Long pacienteId) {
         return consultaRepository.findByPacienteId(pacienteId);
+    }
+
+    public Boolean isAgendado(Consulta novaConsulta) {
+        List<Consulta> consultasHora = consultaRepository.findByDataHora(novaConsulta.getDataHora());
+
+        for (int i = 0; i < consultasHora.size(); i++) {
+            Consulta consultaItem = consultasHora.get(i);
+            if (consultaItem.getMedico().getId() == novaConsulta.getMedico().getId() ||
+                consultaItem.getAluno().getId() == novaConsulta.getAluno().getId() ||
+                consultaItem.getConsultorio().getId() == novaConsulta.getConsultorio().getId() ||
+                consultaItem.getPaciente().getId() == novaConsulta.getPaciente().getId()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public Consulta updateConsulta(Long id, UpdateConsultaDto updateConsultaDto) {
